@@ -23,6 +23,15 @@ let offsetY = 0;
 let isDragging = false;
 let lastMousePos = { x: 0, y: 0 };
 
+let initialPinchDistance = 0;
+let initialScale = 1;
+let initialTouchCenter = { x: 0, y: 0 };
+let initialOffset = { x: 0, y: 0 };
+let isPinching = false;
+let touchStartTime = 0;
+let touchStartPos = { x: 0, y: 0 };
+let isTouchDragging = false;
+
 let pixelRecoveryInterval;
 let currentQuota = 10;
 let maxQuota;
@@ -399,3 +408,103 @@ window.addEventListener('beforeunload', () => {
         clearInterval(window.recoveryCountdownInterval);
     }
 });
+
+function getTouchDistance(touches) {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+}
+
+function getTouchCenter(touches) {
+    return {
+        x: (touches[0].clientX + touches[1].clientX) / 2,
+        y: (touches[0].clientY + touches[1].clientY) / 2
+    };
+}
+
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    
+    if (e.touches.length === 2) {
+        isPinching = true;
+        initialPinchDistance = getTouchDistance(e.touches);
+        initialScale = scale;
+        initialTouchCenter = getTouchCenter(e.touches);
+        initialOffset = { x: offsetX, y: offsetY };
+    } else if (e.touches.length === 1) {
+        touchStartTime = Date.now();
+        touchStartPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        isTouchDragging = false;
+    }
+}, { passive: false });
+
+canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    
+    if (e.touches.length === 2 && isPinching) {
+        const currentDistance = getTouchDistance(e.touches);
+        const currentCenter = getTouchCenter(e.touches);
+        
+        if (initialPinchDistance > 0) {
+            const zoomFactor = currentDistance / initialPinchDistance;
+            let newScale = initialScale * zoomFactor;
+            newScale = Math.min(Math.max(newScale, MIN_ZOOM), MAX_ZOOM);
+            
+            const scaleChange = newScale / initialScale;
+            
+            offsetX = currentCenter.x - (initialTouchCenter.x - initialOffset.x) * scaleChange;
+            offsetY = currentCenter.y - (initialTouchCenter.y - initialOffset.y) * scaleChange;
+            scale = newScale;
+            
+            render();
+        }
+    } else if (e.touches.length === 1) {
+        const moveDistance = Math.sqrt(
+            Math.pow(e.touches[0].clientX - touchStartPos.x, 2) +
+            Math.pow(e.touches[0].clientY - touchStartPos.y, 2)
+        );
+        
+        if (moveDistance > 10) {
+            isTouchDragging = true;
+            const dx = e.touches[0].clientX - touchStartPos.x;
+            const dy = e.touches[0].clientY - touchStartPos.y;
+            offsetX += dx;
+            offsetY += dy;
+            touchStartPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            render();
+        }
+    }
+}, { passive: false });
+
+canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    
+    if (e.touches.length === 0) {
+        if (isPinching) {
+            isPinching = false;
+            initialPinchDistance = 0;
+        } else if (!isTouchDragging && Date.now() - touchStartTime < 300) {
+            const worldX = Math.floor((touchStartPos.x - offsetX) / scale);
+            const worldY = Math.floor((touchStartPos.y - offsetY) / scale);
+            
+            if (worldX >= 0 && worldX < BOARD_WIDTH && worldY >= 0 && worldY < BOARD_HEIGHT) {
+                const drawColor = isEraserSelected ? '#FFFFFF' : selectedColor;
+                if (board[worldY] && board[worldY][worldX] === drawColor) {
+                    return;
+                }
+                socket.emit('draw-pixel', { x: worldX, y: worldY, color: drawColor });
+            }
+        }
+        isTouchDragging = false;
+    } else if (e.touches.length === 1) {
+        isPinching = false;
+        initialPinchDistance = 0;
+    }
+}, { passive: false });
+
+canvas.addEventListener('touchcancel', (e) => {
+    e.preventDefault();
+    isPinching = false;
+    initialPinchDistance = 0;
+    isTouchDragging = false;
+}, { passive: false });
