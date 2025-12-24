@@ -99,6 +99,7 @@ canvas {
     position: relative;
     font-weight: 500;
     letter-spacing: 0.5px;
+    white-space: nowrap;
 }
 
 #status.show {

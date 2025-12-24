@@ -38,6 +38,7 @@ let pixelRecoveryInterval;
 let currentQuota = 10;
 let maxQuota;
 let recoveryCountdown = 0;
+let isAnimating = false;
 
 window.addEventListener('resize', resizeCanvas);
 function resizeCanvas() {
@@ -88,6 +89,73 @@ function render() {
         }
     }
     ctx.restore();
+}
+
+function snapToBounds() {
+    const fixedScale = scale;
+    const boardWidth = BOARD_WIDTH * fixedScale;
+    const boardHeight = BOARD_HEIGHT * fixedScale;
+    const maxOffsetX = canvas.width * 0.3;
+    const maxOffsetY = canvas.height * 0.3;
+    const minOffsetX = canvas.width - boardWidth - maxOffsetX;
+    const minOffsetY = canvas.height - boardHeight - maxOffsetY;
+
+    let targetOffsetX = offsetX;
+    let targetOffsetY = offsetY;
+    let needsSnap = false;
+
+    if (boardWidth < canvas.width) {
+        targetOffsetX = (canvas.width - boardWidth) / 2;
+        needsSnap = true;
+    } else {
+        if (offsetX > maxOffsetX) {
+            targetOffsetX = maxOffsetX;
+            needsSnap = true;
+        } else if (offsetX < minOffsetX) {
+            targetOffsetX = minOffsetX;
+            needsSnap = true;
+        }
+    }
+
+    if (boardHeight < canvas.height) {
+        targetOffsetY = (canvas.height - boardHeight) / 2;
+        needsSnap = true;
+    } else {
+        if (offsetY > maxOffsetY) {
+            targetOffsetY = maxOffsetY;
+            needsSnap = true;
+        } else if (offsetY < minOffsetY) {
+            targetOffsetY = minOffsetY;
+            needsSnap = true;
+        }
+    }
+
+    if (needsSnap) {
+        const startX = offsetX;
+        const startY = offsetY;
+        const startTime = performance.now();
+        const duration = 300;
+
+        function animate(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const easedProgress = 1 - Math.pow(1 - progress, 3);
+
+            offsetX = startX + (targetOffsetX - startX) * easedProgress;
+            offsetY = startY + (targetOffsetY - startY) * easedProgress;
+
+            render();
+
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                isAnimating = false;
+            }
+        }
+
+        isAnimating = true;
+        requestAnimationFrame(animate);
+    }
 }
 
 canvas.addEventListener('wheel', (e) => {
@@ -141,7 +209,12 @@ window.addEventListener('mousemove', (e) => {
     }
 });
 
-window.addEventListener('mouseup', () => isDragging = false);
+window.addEventListener('mouseup', () => {
+    if (isDragging) {
+        isDragging = false;
+        snapToBounds();
+    }
+});
 canvas.oncontextmenu = (e) => e.preventDefault();
 
 socket.on('init-board', (data) => {
@@ -309,7 +382,7 @@ document.getElementById('customColorPicker').addEventListener('change', (e) => {
 document.getElementById('addColorPreset').addEventListener('click', () => {
     const color = selectedColor;
     if (addColorPreset(color)) {
-        showStatus(`颜色 ${color} 已添加到预设`, 'success');
+        showStatus(`颜色已添加到预设`, 'success');
     }
 });
 
@@ -491,6 +564,7 @@ canvas.addEventListener('touchend', (e) => {
         if (isPinching) {
             isPinching = false;
             initialPinchDistance = 0;
+            snapToBounds();
         } else if (!wasPinching && !isTouchDragging && Date.now() - touchStartTime < 300) {
             const worldX = Math.floor((touchStartPos.x - offsetX) / scale);
             const worldY = Math.floor((touchStartPos.y - offsetY) / scale);
@@ -503,7 +577,10 @@ canvas.addEventListener('touchend', (e) => {
                 socket.emit('draw-pixel', { x: worldX, y: worldY, color: drawColor });
             }
         }
-        isTouchDragging = false;
+        if (isTouchDragging) {
+            isTouchDragging = false;
+            snapToBounds();
+        }
         wasPinching = false;
     } else if (e.touches.length === 1) {
         isPinching = false;
@@ -519,5 +596,8 @@ canvas.addEventListener('touchcancel', (e) => {
     e.preventDefault();
     isPinching = false;
     initialPinchDistance = 0;
-    isTouchDragging = false;
+    if (isTouchDragging) {
+        isTouchDragging = false;
+        snapToBounds();
+    }
 }, { passive: false });

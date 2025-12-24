@@ -47,7 +47,7 @@ class ServerManager {
         console.log(`  |  _  |_|_ _ ___| |    \\ ___ ___ _ _ _`);
         console.log(`  |   __| |_'_| -_| |  |  |  _| .'| | | |`);
         console.log(`  |__|  |_|_,_|___|_|____/|_| |__,|_____|`);
-        console.log(`             ----EYPA Magic!----`);
+        console.log(`             ----Draw Magic!----`);
         console.log(``);
 
         this.dataPersistence.loadBoardData();
@@ -88,7 +88,7 @@ class ServerManager {
             }
 
             this.isShuttingDown = true;
-            log(`收到 ${signal} 信号，正在关闭服务端...`);
+            log(`收到 ${signal} 信号，正在关闭服务端`);
 
             try {
                 if (this.webSocketHandler) {
@@ -115,10 +115,10 @@ class ServerManager {
                     this.io.close();
                 }
 
-                log('正在保存画板数据...');
+                log('正在保存画板数据');
                 await this.dataPersistence.saveBoardData();
 
-                log('正在创建备份...');
+                log('正在创建备份');
                 await this.dataPersistence.saveBoardData(true);
 
                 if (this.autoSaveInterval) {
