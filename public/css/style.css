@@ -31,6 +31,10 @@ canvas {
 .top-left {
     top: 7px;
     left: 7px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
 }
 
 .quota-circle {
@@ -66,6 +70,34 @@ canvas {
     font-size: 11px;
     font-weight: bold;
     color: white;
+}
+
+.broadcast-btn {
+    width: 28px;
+    height: 28px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    font-size: 12px;
+    pointer-events: auto;
+    backdrop-filter: blur(10px);
+    border-radius: 30px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.broadcast-btn img {
+    width: 20px;
+    height: 20px;
+}
+
+.broadcast-btn:hover {
+    border: 2px solid rgba(255, 255, 255, 0.5);
 }
 
 #recoveryTimer[style*="display: none"] {
@@ -245,7 +277,7 @@ canvas {
 }
 
 #addColorPreset {
-    background: rgba(0, 0, 0, 0.322);
+    background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(10px);
     color: white;
     border: 1px solid rgba(255, 255, 255, 0.3);
@@ -262,16 +294,13 @@ canvas {
     transition: all 0.2s ease;
 }
 
+#addColorPreset:hover {
+    border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
 #addColorPreset img {
     width: 12px;
     height: 12px;
-}
-
-#clearColorPresets {
-    font-size: 12px;
-    border-radius: 15px;
-    width: auto;
-    padding: 0 10px;
 }
 
 .color-empty-message {
@@ -383,20 +412,24 @@ canvas {
 
 @keyframes fadeIn {
     from {
+        backdrop-filter: blur(0px);
         opacity: 0;
     }
 
     to {
+        backdrop-filter: blur(5px);
         opacity: 1;
     }
 }
 
 @keyframes fadeOut {
     from {
+        backdrop-filter: blur(5px);
         opacity: 1;
     }
 
     to {
+        backdrop-filter: blur(0px);
         opacity: 0;
     }
 }

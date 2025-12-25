@@ -453,6 +453,10 @@ document.getElementById('eraser').addEventListener('click', () => {
     selectEraser();
 });
 
+document.getElementById('broadcastBtn').addEventListener('click', () => {
+    showBroadcastModalForce();
+});
+
 function showStatus(message, type = 'info') {
     const statusDiv = document.getElementById('status');
 
@@ -686,6 +690,40 @@ function showBroadcastModal() {
                         broadcastModal.style.animation = '';
                         broadcastModal.querySelector('.modal-content').style.animation = '';
                         localStorage.setItem(BROADCAST_VERSION_KEY, String(data.version));
+                    }, 300);
+                };
+
+                closeBtn.onclick = closeModal;
+
+                broadcastModal.onclick = (e) => {
+                    if (e.target === broadcastModal) {
+                        closeModal();
+                    }
+                };
+            }
+        })
+}
+
+function showBroadcastModalForce() {
+    const broadcastModal = document.getElementById('broadcast-modal');
+    const broadcastContent = document.getElementById('broadcast-content');
+    const closeBtn = document.querySelector('.modal-close');
+
+    fetch('/api/broadcast')
+        .then(response => response.json())
+        .then(data => {
+            if (data.content) {
+                broadcastContent.textContent = data.content;
+                broadcastModal.classList.add('show');
+
+                const closeModal = () => {
+                    broadcastModal.style.animation = 'fadeOut 0.3s ease forwards';
+                    broadcastModal.querySelector('.modal-content').style.animation = 'slideOut 0.3s ease forwards';
+                    
+                    setTimeout(() => {
+                        broadcastModal.classList.remove('show');
+                        broadcastModal.style.animation = '';
+                        broadcastModal.querySelector('.modal-content').style.animation = '';
                     }, 300);
                 };
 
