@@ -262,6 +262,11 @@ canvas {
     transition: all 0.2s ease;
 }
 
+#addColorPreset img {
+    width: 12px;
+    height: 12px;
+}
+
 #clearColorPresets {
     font-size: 12px;
     border-radius: 15px;

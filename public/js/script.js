@@ -39,6 +39,14 @@ let currentQuota = 10;
 let maxQuota;
 let recoveryCountdown = 0;
 let isAnimating = false;
+let zoomAnimationId = null;
+let zoomStartTime = null;
+let zoomStartScale = null;
+let zoomStartOffsetX = null;
+let zoomStartOffsetY = null;
+let zoomTargetScale = null;
+let zoomTargetOffsetX = null;
+let zoomTargetOffsetY = null;
 
 window.addEventListener('resize', resizeCanvas);
 function resizeCanvas() {
@@ -160,26 +168,73 @@ function snapToBounds() {
 
 canvas.addEventListener('wheel', (e) => {
     e.preventDefault();
-    const zoomSpeed = 0.1;
-    const delta = -Math.sign(e.deltaY);
+    const zoomSpeed = 0.003;
+    const rawDelta = -e.deltaY;
+    const zoomFactor = Math.exp(rawDelta * zoomSpeed);
 
-    const isAtMaxZoom = scale >= MAX_ZOOM && delta > 0;
-    const isAtMinZoom = scale <= MIN_ZOOM && delta < 0;
-
-    if (isAtMaxZoom || isAtMinZoom) {
-        return;
-    }
-
-    const zoom = Math.exp(delta * zoomSpeed);
     const mouseX = e.clientX;
     const mouseY = e.clientY;
 
-    offsetX = mouseX - (mouseX - offsetX) * zoom;
-    offsetY = mouseY - (mouseY - offsetY) * zoom;
-    scale *= zoom;
+    const currentScale = scale;
+    const currentOffsetX = offsetX;
+    const currentOffsetY = offsetY;
 
-    scale = Math.min(Math.max(scale, MIN_ZOOM), MAX_ZOOM);
-    render();
+    let newScale = currentScale * zoomFactor;
+    newScale = Math.min(Math.max(newScale, MIN_ZOOM), MAX_ZOOM);
+
+    if (newScale === currentScale) {
+        return;
+    }
+
+    const zoomRatio = newScale / currentScale;
+    const newOffsetX = mouseX - (mouseX - currentOffsetX) * zoomRatio;
+    const newOffsetY = mouseY - (mouseY - currentOffsetY) * zoomRatio;
+
+    if (zoomAnimationId) {
+        const elapsed = performance.now() - zoomStartTime;
+        const progress = Math.min(elapsed / 150, 1);
+        const easedProgress = 1 - Math.pow(1 - progress, 2);
+
+        scale = zoomStartScale + (zoomTargetScale - zoomStartScale) * easedProgress;
+        offsetX = zoomStartOffsetX + (zoomTargetOffsetX - zoomStartOffsetX) * easedProgress;
+        offsetY = zoomStartOffsetY + (zoomTargetOffsetY - zoomStartOffsetY) * easedProgress;
+
+        zoomStartScale = scale;
+        zoomStartOffsetX = offsetX;
+        zoomStartOffsetY = offsetY;
+    } else {
+        zoomStartScale = currentScale;
+        zoomStartOffsetX = currentOffsetX;
+        zoomStartOffsetY = currentOffsetY;
+    }
+
+    zoomTargetScale = newScale;
+    zoomTargetOffsetX = newOffsetX;
+    zoomTargetOffsetY = newOffsetY;
+    zoomStartTime = performance.now();
+
+    function animate() {
+        const elapsed = performance.now() - zoomStartTime;
+        const duration = 150;
+        const progress = Math.min(elapsed / duration, 1);
+        const easedProgress = 1 - Math.pow(1 - progress, 2);
+
+        scale = zoomStartScale + (zoomTargetScale - zoomStartScale) * easedProgress;
+        offsetX = zoomStartOffsetX + (zoomTargetOffsetX - zoomStartOffsetX) * easedProgress;
+        offsetY = zoomStartOffsetY + (zoomTargetOffsetY - zoomStartOffsetY) * easedProgress;
+
+        render();
+
+        if (progress < 1) {
+            zoomAnimationId = requestAnimationFrame(animate);
+        } else {
+            zoomAnimationId = null;
+        }
+    }
+
+    if (!zoomAnimationId) {
+        zoomAnimationId = requestAnimationFrame(animate);
+    }
 }, { passive: false });
 
 canvas.addEventListener('mousedown', (e) => {
