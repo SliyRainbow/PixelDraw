@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -7,6 +8,7 @@
     <title>PixelDraw</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
     <div id="loading-screen">
         <div class="loader"></div>
@@ -28,8 +30,12 @@
         <div class="hud top-left">
             <div class="quota-circle">
                 <svg class="quota-progress" viewBox="0 0 36 36">
-                    <path class="quota-progress-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="3"/>
-                    <path class="quota-progress-bar" id="recoveryProgressBar" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#4CAF50" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round"/>
+                    <path class="quota-progress-bg"
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none"
+                        stroke="rgba(255,255,255,0.2)" stroke-width="3" />
+                    <path class="quota-progress-bar" id="recoveryProgressBar"
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none"
+                        stroke="#4CAF50" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round" />
                 </svg>
                 <span class="quota-number" id="quota">-</span>
             </div>
@@ -38,7 +44,6 @@
             </button>
         </div>
 
-        <!-- 新增右上角区域，放置登录/用户信息 -->
         <div class="hud top-right">
             <div class="user-section">
                 <button id="loginBtn" class="login-btn">登录</button>
@@ -69,9 +74,18 @@
         <div class="hud top-center">
             <div id="status"></div>
         </div>
+
+        <div class="hud bottom-right">
+            <div id="connection-status" class="connection-status">
+                <span class="status-icon"></span>
+                <span class="status-text">-</span>
+                <span class="ping-text" id="ping-text"></span>
+            </div>
+        </div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="js/script.js"></script>
 </body>
+
 </html>

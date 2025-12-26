@@ -16,6 +16,8 @@ const ctx = canvas.getContext('2d');
 const quotaSpan = document.getElementById('quota');
 const recoveryProgressBar = document.getElementById('recoveryProgressBar');
 const statusDiv = document.getElementById('status');
+const connectionStatusDiv = document.getElementById('connection-status');
+const pingTextSpan = document.getElementById('ping-text');
 
 // 获取UI元素引用
 const loginBtn = document.getElementById('loginBtn');
@@ -63,14 +65,79 @@ let zoomStartOffsetY = null;
 let zoomTargetScale = null;
 let zoomTargetOffsetX = null;
 let zoomTargetOffsetY = null;
+let reconnectInterval = null;
+const RECONNECT_DELAY = 10000;
+let pingInterval = null;
+let currentPing = 0;
 
-// 添加登录按钮点击事件
 if (loginBtn) {
     loginBtn.addEventListener('click', () => {
-        // 跳转到认证页面，并带上当前页面作为回调
         window.location.href = 'https://eqmemory.cn/eu-authorize/?callback=' + encodeURIComponent(window.location.href);
     });
 }
+
+function updateConnectionStatus(status) {
+    connectionStatusDiv.className = 'connection-status ' + status;
+    const statusText = connectionStatusDiv.querySelector('.status-text');
+    switch (status) {
+        case 'connected':
+            statusText.textContent = '已连接';
+            break;
+        case 'reconnecting':
+            statusText.textContent = '重连中...';
+            break;
+    }
+}
+
+function measurePing() {
+    const startTime = Date.now();
+    socket.emit('ping');
+    socket.once('pong', () => {
+        currentPing = Date.now() - startTime;
+        pingTextSpan.textContent = currentPing + 'ms';
+    });
+}
+
+function startPingMeasurement() {
+    if (pingInterval) {
+        clearInterval(pingInterval);
+    }
+    measurePing();
+    pingInterval = setInterval(measurePing, 1000);
+}
+
+function stopPingMeasurement() {
+    if (pingInterval) {
+        clearInterval(pingInterval);
+        pingInterval = null;
+    }
+    pingTextSpan.textContent = '';
+}
+
+socket.on('connect', () => {
+    updateConnectionStatus('connected');
+    if (reconnectInterval) {
+        clearInterval(reconnectInterval);
+        reconnectInterval = null;
+    }
+    startPingMeasurement();
+});
+
+socket.on('disconnect', () => {
+    updateConnectionStatus('reconnecting');
+    stopPingMeasurement();
+    if (!reconnectInterval) {
+        reconnectInterval = setInterval(() => {
+            socket.connect();
+        }, RECONNECT_DELAY);
+    }
+});
+
+socket.on('connect_error', () => {
+    if (!socket.connected) {
+        updateConnectionStatus('reconnecting');
+    }
+});
 
 window.addEventListener('resize', resizeCanvas);
 
@@ -330,7 +397,7 @@ socket.on('login-success', (data) => {
     if (data.sessionKey) {
         localStorage.setItem('eu_session_key', data.sessionKey);
     }
-    
+
     // 更新UI显示用户信息
     if (data.user) {
         if (loginBtn) loginBtn.style.display = 'none';
@@ -338,7 +405,7 @@ socket.on('login-success', (data) => {
         if (userName) userName.textContent = data.user.nickname || '用户';
         if (userAvatar && data.user.avatar) userAvatar.src = data.user.avatar;
     }
-    
+
     showStatus('登录成功！', 'success');
 });
 
