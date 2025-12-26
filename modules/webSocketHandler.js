@@ -87,7 +87,7 @@ getUserIP(socket) {
         }
 
         const timeSinceLastRefill = now - userLimit.lastRefillTime;
-        const tokensToRefill = Math.floor(timeSinceLastRefill / (60 * 1000)); // 每分钟1个
+        const tokensToRefill = Math.floor(timeSinceLastRefill / (60 * 1000));
         
         if (tokensToRefill > 0) {
             userLimit.tokens = Math.min(userLimit.tokens + tokensToRefill, userLimit.maxTokens);
