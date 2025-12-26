@@ -38,32 +38,17 @@ body {
 .loader {
     width: 40px;
     height: 40px;
-    --c: no-repeat linear-gradient(rgb(255, 255, 255) 0 0);
-    background: var(--c), var(--c), var(--c), var(--c);
+    --c:no-repeat linear-gradient(rgb(255, 255, 255) 0 0);
+    background: var(--c),var(--c),var(--c),var(--c);
     background-size: 21px 21px;
-    animation: l5 1.5s infinite cubic-bezier(0.3, 1, 0, 1);
+    animation: l5 1.5s infinite cubic-bezier(0.3,1,0,1);
 }
 
 @keyframes l5 {
-    0% {
-        background-position: 0 0, 100% 0, 100% 100%, 0 100%
-    }
-
-    33% {
-        background-position: 0 0, 100% 0, 100% 100%, 0 100%;
-        width: 60px;
-        height: 60px
-    }
-
-    66% {
-        background-position: 100% 0, 100% 100%, 0 100%, 0 0;
-        width: 60px;
-        height: 60px
-    }
-
-    100% {
-        background-position: 100% 0, 100% 100%, 0 100%, 0 0
-    }
+   0%   {background-position: 0    0,100% 0   ,100% 100%,0 100%}
+   33%  {background-position: 0    0,100% 0   ,100% 100%,0 100%;width:60px;height: 60px}
+   66%  {background-position: 100% 0,100% 100%,0    100%,0 0   ;width:60px;height: 60px}
+   100% {background-position: 100% 0,100% 100%,0    100%,0 0   }
 }
 
 canvas {
@@ -87,67 +72,6 @@ canvas {
     pointer-events: auto;
 }
 
-.bottom-right {
-    bottom: 7px;
-    right: 7px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 10px;
-}
-
-.connection-status {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(0, 0, 0, 0.5);
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(10px);
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    color: white;
-    transition: all 0.3s ease;
-}
-
-.ping-text {
-    color: rgba(255, 255, 255, 0.6);
-    font-size: 11px;
-    margin-right: 1px;
-}
-
-.connection-status.reconnecting .ping-text {
-    margin-right: -4px;
-}
-
-.status-icon {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background-color: #c0c0c0;
-}
-
-.connection-status.connected .status-icon {
-    background-color: #4CAF50;
-}
-
-.connection-status.reconnecting .status-icon {
-    background-color: #ff9800;
-    animation: blink 2s ease-in-out infinite;
-}
-
-@keyframes blink {
-
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.6;
-    }
-}
-
 .top-left {
     top: 7px;
     left: 7px;
@@ -156,6 +80,71 @@ canvas {
     align-items: center;
     gap: 10px;
 }
+
+/* 新增右上角定位样式 */
+.top-right {
+    top: 7px;
+    right: 7px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+.user-section {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.login-btn {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    transition: background 0.2s;
+    pointer-events: auto;
+}
+
+.login-btn:hover {
+    background: #45a049;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 4px 12px 4px 4px;
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.user-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1px solid white;
+    background-color: #ccc;
+    object-fit: cover;
+}
+
+.user-name {
+    font-size: 12px;
+    color: white;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: right;
+}
+/* 修改结束 */
 
 .quota-circle {
     position: relative;
@@ -436,19 +425,15 @@ canvas {
         transform: rotate(0deg);
         border-color: #ffe600;
     }
-
     25% {
         border-color: #ffc107;
     }
-
     50% {
         border-color: #ff9800;
     }
-
     75% {
         border-color: #ffc107;
     }
-
     100% {
         transform: rotate(360deg);
         border-color: #ffe600;
@@ -460,10 +445,6 @@ canvas {
         left: 48%;
         transform: translateX(-50%) scale(1.2);
         align-items: center;
-    }
-
-    .connection-status {
-        display: none;
     }
 }
 
@@ -540,7 +521,6 @@ canvas {
         backdrop-filter: blur(0px);
         opacity: 0;
     }
-
     to {
         backdrop-filter: blur(5px);
         opacity: 1;
@@ -552,7 +532,6 @@ canvas {
         backdrop-filter: blur(5px);
         opacity: 1;
     }
-
     to {
         backdrop-filter: blur(0px);
         opacity: 0;
@@ -565,7 +544,6 @@ canvas {
         filter: blur(3px);
         opacity: 0;
     }
-
     to {
         transform: scale(1);
         filter: blur(0px);
@@ -578,7 +556,6 @@ canvas {
         filter: blur(0px);
         opacity: 1;
     }
-
     to {
         filter: blur(3px);
         opacity: 0;

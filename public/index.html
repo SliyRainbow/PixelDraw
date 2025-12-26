@@ -12,7 +12,6 @@
         <div class="loader"></div>
         <div class="loading-text">Powered by PixelDraw</div>
     </div>
-
     <canvas id="canvas"></canvas>
 
     <div id="broadcast-modal" class="modal">
@@ -39,6 +38,17 @@
             </button>
         </div>
 
+        <!-- 新增右上角区域，放置登录/用户信息 -->
+        <div class="hud top-right">
+            <div class="user-section">
+                <button id="loginBtn" class="login-btn">登录</button>
+                <div id="userInfo" class="user-info" style="display: none;">
+                    <img id="userAvatar" src="" class="user-avatar">
+                    <span id="userName" class="user-name"></span>
+                </div>
+            </div>
+        </div>
+
         <div class="hud bottom-left">
             <div class="color-controls">
                 <div class="color-row">
@@ -58,14 +68,6 @@
 
         <div class="hud top-center">
             <div id="status"></div>
-        </div>
-
-        <div class="hud bottom-right">
-            <div id="connection-status" class="connection-status">
-                <span class="status-icon"></span>
-                <span class="status-text">-</span>
-                <span class="ping-text" id="ping-text"></span>
-            </div>
         </div>
     </div>
 
