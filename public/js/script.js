@@ -286,7 +286,7 @@ window.addEventListener('mousemove', (e) => {
     } else {
         const worldX = Math.floor((e.clientX - offsetX) / scale);
         const worldY = Math.floor((e.clientY - offsetY) / scale);
-        
+
         if (worldX >= 0 && worldX < BOARD_WIDTH && worldY >= 0 && worldY < BOARD_HEIGHT) {
             hoverPixel = { x: worldX, y: worldY };
         } else {
@@ -327,6 +327,8 @@ socket.on('init-board', (data) => {
 
     socket.emit('request-quota-update');
     startPixelRecoveryTimer();
+
+    hideLoadingScreen();
 });
 socket.on('pixel-update', ({ x, y, color }) => {
     if (y >= 0 && y < BOARD_HEIGHT && x >= 0 && x < BOARD_WIDTH && board[y]) {
@@ -709,18 +711,18 @@ function showBroadcastModal() {
         .then(data => {
             if (data.content) {
                 const currentVersion = localStorage.getItem(BROADCAST_VERSION_KEY);
-                
+
                 if (currentVersion === String(data.version)) {
                     return;
                 }
-                
+
                 broadcastContent.textContent = data.content;
                 broadcastModal.classList.add('show');
 
                 const closeModal = () => {
                     broadcastModal.style.animation = 'fadeOut 0.3s ease forwards';
                     broadcastModal.querySelector('.modal-content').style.animation = 'slideOut 0.3s ease forwards';
-                    
+
                     setTimeout(() => {
                         broadcastModal.classList.remove('show');
                         broadcastModal.style.animation = '';
@@ -755,7 +757,7 @@ function showBroadcastModalForce() {
                 const closeModal = () => {
                     broadcastModal.style.animation = 'fadeOut 0.3s ease forwards';
                     broadcastModal.querySelector('.modal-content').style.animation = 'slideOut 0.3s ease forwards';
-                    
+
                     setTimeout(() => {
                         broadcastModal.classList.remove('show');
                         broadcastModal.style.animation = '';
@@ -774,10 +776,18 @@ function showBroadcastModalForce() {
         })
 }
 
+function hideLoadingScreen() {
+    const loadingScreen = document.getElementById('loading-screen');
+    if (loadingScreen) {
+        setTimeout(() => {
+            loadingScreen.classList.add('hidden');
+            checkAndShowBroadcast();
+        }, 800);
+    }
+}
+
 function checkAndShowBroadcast() {
     setTimeout(() => {
         showBroadcastModal();
-    }, 1000);
+    }, 600);
 }
-
-checkAndShowBroadcast();
