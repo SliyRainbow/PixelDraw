@@ -6,26 +6,22 @@ class WebSocketHandler {
     constructor(io, dataPersistence) {
         this.io = io;
         this.dataPersistence = dataPersistence;
-        this.userRateLimits = {};
+        // 从 dataPersistence 获取会话和配额数据的引用，以实现数据持久化
+        this.sessions = this.dataPersistence.getSessions();
+        this.userRateLimits = this.dataPersistence.getUserRateLimits();
         this.activeConnections = new Map();
         
-        // 添加Session内存存储
-        this.sessions = new Map();
-
         // 添加Socket中间件进行鉴权
         this.io.use(async (socket, next) => {
             const auth = socket.handshake.auth || {};
             const token = auth.token;
             const sessionKey = auth.sessionKey;
-
             // 默认设置为游客身份
             socket.user = { isGuest: true, id: null, nickname: 'Guest' };
-
             if (sessionKey && this.sessions.has(sessionKey)) {
                 socket.user = this.sessions.get(sessionKey);
                 return next();
             }
-
             if (token) {
                 const user = await this.verifyToken(token);
                 if (user) {
@@ -39,7 +35,6 @@ class WebSocketHandler {
             
             next();
         });
-
         this.setupSocketHandlers();
     }
 
@@ -55,7 +50,6 @@ class WebSocketHandler {
                     'Accept': 'application/json'
                 }
             };
-
             const req = https.get(verifyUrl, options, (res) => {
                 let data = '';
                 res.on('data', chunk => data += chunk);
@@ -67,7 +61,6 @@ class WebSocketHandler {
                         resolve(null);
                         return;
                     }
-
                     try {
                         const userInfo = JSON.parse(data);
                         
@@ -88,7 +81,6 @@ class WebSocketHandler {
                     }
                 });
             });
-
             req.on('error', (e) => {
                 logError('Token验证网络错误: ' + e.message);
                 resolve(null);
@@ -100,16 +92,13 @@ class WebSocketHandler {
         this.io.on('connection', (socket) => {
             const userIP = this.getUserIP(socket);
             const user = socket.user; // 获取鉴权后的用户对象
-
             log(`用户连接: ${userIP} (Socket: ${socket.id}, User: ${user.nickname})`);
-
             this.activeConnections.set(socket.id, {
                 socket: socket,
                 userIP: userIP,
                 user: user, // 保存用户信息到连接记录
                 connectedAt: Date.now()
             });
-
             if (!user.isGuest) {
                 socket.emit('login-success', {
                     user: {
@@ -121,7 +110,6 @@ class WebSocketHandler {
                 });
                 delete socket.newSessionKey;
             }
-
             socket.emit('init-board', { 
                 board: this.dataPersistence.getBoard(), 
                 boardWidth: config.BOARD_WIDTH,
@@ -132,16 +120,13 @@ class WebSocketHandler {
             });
             
             this.updateUserQuota(socket); // 传入 socket 以便根据用户ID更新配额
-
             socket.on('draw-pixel', ({ x, y, color }) => {
                 this.handleDrawPixel(socket, x, y, color); // 传入 socket
             });
-
             socket.on('disconnect', () => {
                 log(`用户断开连接: ${userIP} (Socket: ${socket.id})`);
                 this.activeConnections.delete(socket.id);
             });
-
             socket.on('request-quota-update', () => {
                 this.updateUserQuota(socket);
             });
@@ -171,23 +156,19 @@ class WebSocketHandler {
             socket.emit('error-message', '游客无法绘图，请先登录！');
             return;
         }
-
         if (x < 0 || x >= config.BOARD_WIDTH || y < 0 || y >= config.BOARD_HEIGHT) {
             return;
         }
-
         const currentColor = this.dataPersistence.getPixel(x, y);
         if (currentColor === color) {
             return;
         }
-
         const now = Date.now();
         
         // 使用用户ID作为限流键，而不是IP
         const rateLimitKey = socket.user.id;
         
         let userLimit = this.userRateLimits[rateLimitKey];
-
         if (!userLimit) {
             userLimit = {
                 tokens: config.MAX_PIXELS_PER_WINDOW,
@@ -196,7 +177,6 @@ class WebSocketHandler {
             };
             this.userRateLimits[rateLimitKey] = userLimit;
         }
-
         const timeSinceLastRefill = now - userLimit.lastRefillTime;
         const tokensToRefill = Math.floor(timeSinceLastRefill / (60 * 1000)); // 每分钟1个
         
@@ -204,7 +184,6 @@ class WebSocketHandler {
             userLimit.tokens = Math.min(userLimit.tokens + tokensToRefill, userLimit.maxTokens);
             userLimit.lastRefillTime = now;
         }
-
         if (userLimit.tokens > 0) {
             userLimit.tokens -= 1;
             
@@ -225,7 +204,6 @@ class WebSocketHandler {
             socket.emit('quota-update', 0, null);
             return;
         }
-
         const now = Date.now();
         const rateLimitKey = socket.user.id; // 使用用户ID
         
